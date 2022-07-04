@@ -27,22 +27,23 @@ jobs:
           registry: ${{env.registry}}
           username: ${{secrets.DOCKERHUB_USERNAME}}
           password: ${{secrets.DOCKERHUB_TOKEN}}
+      - name: Get commit hash
+        id: commit
+        uses: pr-mpt/actions-commit-hash@v1
       - name: extract metadata for docker
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: ${{env.registry}}/${{env.repository}}
-          tags: |
-            type=semver,pattern={{version}}
-      - name: Get commit hash
-        id: commit
-        uses: pr-mpt/actions-commit-hash@v1
+#          tags: |
+#            type=semver,pattern={{version}}
+          tags: ${{ steps.commit.outputs.short }}
       - name: docker build
         uses: docker/build-push-action@v3
         with:
 #          push: ${{github.event_name != 'pull_request'}}
-#          tags: ${{steps.meta.outputs.tags}}
+          tags: ${{steps.meta.outputs.tags}}
           push: true
-          tags: ${{ steps.commit.outputs.short }}
+#          tags: ${{ steps.commit.outputs.short }}
           labels: ${{steps.meta.outputs.labels}}
           platforms: linux/amd64
