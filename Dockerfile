@@ -1,5 +1,5 @@
 # Simple usage with a mounted data directory:
-# > docker build -t simapp .
+# > docker build --platform="linux/amd64" -t simapp .
 #
 # Server:
 # > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simapp:/root/.simapp simapp simd init test-chain
@@ -30,7 +30,7 @@ RUN make build-linux
 FROM alpine:edge
 
 # Install ca-certificates
-RUN apk add --update ca-certificates
+RUN apk add --update ca-certificates libstdc++
 WORKDIR /root
 
 # Copy over binaries from the build-env
