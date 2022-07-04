@@ -34,11 +34,17 @@ jobs:
           images: ${{env.registry}}/${{env.repository}}
           tags: |
             type=semver,pattern={{version}}
+      - name: Get commit
+        id: commit
+        uses: pr-mpt/actions-commit-hash@v1
+        with:
+          commit: "${{ github.event.workflow_run.head_sha }}"
+          prefix: "sha-"
       - name: docker build
         uses: docker/build-push-action@v3
         with:
           push: ${{github.event_name != 'pull_request'}}
 #          tags: ${{steps.meta.outputs.tags}}
-          tags: ${GITHUB_SHA::6}
+          tags: ${{ steps.commit.outputs.short }}
           labels: ${{steps.meta.outputs.labels}}
           platforms: linux/amd64
