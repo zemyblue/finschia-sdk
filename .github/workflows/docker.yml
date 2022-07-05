@@ -24,26 +24,25 @@ jobs:
         uses: docker/login-action@v2
         if: github.event_name != 'pull_request'
         with:
-          registry: ${{env.registry}}
+#          registry: ${{env.registry}}
           username: ${{secrets.DOCKERHUB_USERNAME}}
           password: ${{secrets.DOCKERHUB_TOKEN}}
       - name: Get commit hash
         id: commit
         uses: pr-mpt/actions-commit-hash@v1
-      - name: extract metadata for docker
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{env.registry}}/${{env.repository}}
-#          tags: |
-#            type=semver,pattern={{version}}
-          tags: ${{ steps.commit.outputs.short }}
-      - name: docker build
+#      - name: extract metadata for docker
+#        id: meta
+#        uses: docker/metadata-action@v4
+#        with:
+#          images: ${{env.registry}}/${{env.repository}}
+##          tags: |
+##            type=semver,pattern={{version}}
+#          tags: ${{ steps.commit.outputs.short }}
+      - name: docker build and push
         uses: docker/build-push-action@v3
         with:
 #          push: ${{github.event_name != 'pull_request'}}
-          tags: ${{steps.meta.outputs.tags}}
           push: true
-#          tags: ${{ steps.commit.outputs.short }}
+          tags: ${{steps.meta.outputs.tags}}
           labels: ${{steps.meta.outputs.labels}}
           platforms: linux/amd64
