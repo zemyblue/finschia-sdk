@@ -28,7 +28,12 @@ func (k Keeper) handleUpdateFoundationParamsProposal(ctx sdk.Context, p *foundat
 // handleUpdateValidatorAuthsProposal is a handler for update validator auths proposal
 func (k Keeper) handleUpdateValidatorAuthsProposal(ctx sdk.Context, p *foundation.UpdateValidatorAuthsProposal) error {
 	for _, auth := range p.Auths {
-		grantee := sdk.ValAddress(auth.OperatorAddress).ToAccAddress()
+		valAddr, err := sdk.ValAddressFromBech32(auth.OperatorAddress)
+		grantee := sdk.AccAddress(valAddr)
+
+		if err != nil {
+			return err
+		}
 		if auth.CreationAllowed {
 			authorization := &stakingplus.CreateValidatorAuthorization{
 				ValidatorAddress: auth.OperatorAddress,
@@ -74,7 +79,11 @@ func (k Keeper) SubmitProposal(ctx sdk.Context, proposers []string, metadata str
 	}
 
 	foundationInfo := k.GetFoundationInfo(ctx)
-	if err := ensureMsgAuthz(msgs, sdk.AccAddress(foundationInfo.Operator)); err != nil {
+	operator, err := sdk.AccAddressFromBech32(foundationInfo.Operator)
+	if err != nil {
+		return 0, err
+	}
+	if err := ensureMsgAuthz(msgs, operator); err != nil {
 		return 0, err
 	}
 

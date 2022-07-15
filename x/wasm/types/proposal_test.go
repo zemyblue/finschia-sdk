@@ -96,8 +96,8 @@ func TestValidateProposalCommons(t *testing.T) {
 
 func TestValidateStoreCodeProposal(t *testing.T) {
 	var (
-		anyAddress     = sdk.BytesToAccAddress(bytes.Repeat([]byte{0x0}, ContractAddrLen))
-		invalidAddress = "invalid address"
+		anyAddress     sdk.AccAddress = bytes.Repeat([]byte{0x0}, ContractAddrLen)
+		invalidAddress                = "invalid address"
 	)
 
 	specs := map[string]struct {
@@ -930,7 +930,7 @@ func TestProposalJsonSignBytes(t *testing.T) {
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			msg, err := govtypes.NewMsgSubmitProposal(spec.src, sdk.NewCoins(), sdk.AccAddress([]byte{}))
+			msg, err := govtypes.NewMsgSubmitProposal(spec.src, sdk.NewCoins(), []byte{})
 			require.NoError(t, err)
 
 			bz := msg.GetSignBytes()
