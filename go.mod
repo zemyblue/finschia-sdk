@@ -32,7 +32,7 @@ require (
 	github.com/jhump/protoreflect v1.10.3
 	github.com/line/ostracon v1.0.7-0.20220729051742-2231684789c6
 	github.com/line/wasmvm v1.0.0-0.10.0
-	github.com/magiconair/properties v1.8.6
+	github.com/magiconair/properties v1.8.7
 	github.com/mailru/easyjson v0.7.7
 	github.com/mattn/go-isatty v0.0.14
 	github.com/pkg/errors v0.9.1
