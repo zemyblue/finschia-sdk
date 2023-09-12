@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-
+	"fmt"
 	sdk "github.com/Finschia/finschia-sdk/types"
+	auth "github.com/Finschia/finschia-sdk/x/auth/types"
 	"github.com/Finschia/finschia-sdk/x/token"
 )
 
@@ -34,6 +35,16 @@ func (s msgServer) Send(c context.Context, req *token.MsgSend) (*token.MsgSendRe
 
 	if err := s.keeper.Send(ctx, req.ContractId, from, to, req.Amount); err != nil {
 		return nil, err
+	}
+
+	// if to is smart contract address
+	if s.keeper.wasmKeeper.GetContractInfo(ctx, to) != nil {
+		moduleAddr := auth.NewModuleAddress(token.ModuleName)
+		msg := []byte(fmt.Sprintf("{\"Receiver\": {\"sender\": \"%v\", \"amount\": \"%v\"}}", moduleAddr.String(), req.Amount))
+		_, err := s.keeper.wasmKeeper.Execute(ctx, to, moduleAddr, msg, nil)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	event := token.EventSent{

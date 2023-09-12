@@ -10,6 +10,7 @@ import (
 // Keeper defines the token module Keeper
 type Keeper struct {
 	classKeeper token.ClassKeeper
+	wasmKeeper  token.WasmKeeper
 
 	// The (unexposed) keys used to access the stores from the Context.
 	storeKey sdk.StoreKey
@@ -23,9 +24,11 @@ func NewKeeper(
 	cdc codec.Codec,
 	key sdk.StoreKey,
 	ck token.ClassKeeper,
+	wk token.WasmKeeper,
 ) Keeper {
 	return Keeper{
 		classKeeper: ck,
+		wasmKeeper:  wk,
 		storeKey:    key,
 		cdc:         cdc,
 	}
