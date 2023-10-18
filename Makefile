@@ -550,7 +550,7 @@ GORELEASER_SKIP_VALIDATE ?= false
 GORELEASER_DEBUG         ?= false
 GORELEASER_IMAGE         ?= goreleaser/goreleaser-cross:v1.21-v1.20.0
 GORELEASER_RELEASE       ?= false
-GO_MOD_NAME              := github.com/Finschia/finschia-sdk
+GO_MOD_NAME              := github.com/zemyblue/finschia-sdk
 
 ifeq ($(GORELEASER_RELEASE),true)
 	GORELEASER_SKIP_VALIDATE := false
