@@ -17,6 +17,9 @@ import (
 	ocabci "github.com/Finschia/ostracon/abci/types"
 	"github.com/Finschia/ostracon/libs/log"
 	ostos "github.com/Finschia/ostracon/libs/os"
+	"github.com/Finschia/wasmd/x/wasm"
+	wasmkeeper "github.com/Finschia/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/Finschia/wasmd/x/wasm/types"
 
 	"github.com/Finschia/finschia-sdk/baseapp"
 	"github.com/Finschia/finschia-sdk/client"
@@ -201,6 +204,7 @@ type SimApp struct {
 	ClassKeeper      classkeeper.Keeper
 	TokenKeeper      tokenkeeper.Keeper
 	CollectionKeeper collectionkeeper.Keeper
+	WasmKeeper       wasmkeeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -254,6 +258,7 @@ func NewSimApp(
 		token.StoreKey,
 		collection.StoreKey,
 		authzkeeper.StoreKey,
+		wasmtypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
@@ -283,6 +288,7 @@ func NewSimApp(
 
 	// add capability keeper and ScopeToModule for ibc module
 	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
+	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
 
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
 	// their scoped modules in `NewApp` with `ScopeToModule`
@@ -318,8 +324,38 @@ func NewSimApp(
 	foundationConfig := foundation.DefaultConfig()
 	app.FoundationKeeper = foundationkeeper.NewKeeper(appCodec, keys[foundation.StoreKey], app.BaseApp.MsgServiceRouter(), app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, foundationConfig, foundation.DefaultAuthority().String(), app.GetSubspace(foundation.ModuleName))
 
+	wasmDir := filepath.Join(homePath, "wasm")
+	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	availableCapabilities := "iterator,staking,stargate,cosmwasm_1_1"
+	app.WasmKeeper = wasmkeeper.NewKeeper(
+		appCodec,
+		keys[wasmtypes.StoreKey],
+		app.GetSubspace(wasmtypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		app.DistrKeeper,
+		nil,
+		nil,
+		scopedWasmKeeper,
+		nil,
+		app.MsgServiceRouter(),
+		app.GRPCQueryRouter(),
+		wasmDir,
+		wasmConfig,
+		availableCapabilities,
+	)
+
+	wasmKeeper := struct {
+		wasmkeeper.Keeper
+		wasmkeeper.PermissionedKeeper
+	}{
+		app.WasmKeeper,
+		*wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper),
+	}
+
 	app.ClassKeeper = classkeeper.NewKeeper(appCodec, keys[class.StoreKey])
-	app.TokenKeeper = tokenkeeper.NewKeeper(appCodec, keys[token.StoreKey], app.ClassKeeper)
+	app.TokenKeeper = tokenkeeper.NewKeeper(appCodec, keys[token.StoreKey], app.ClassKeeper, wasmKeeper)
 	app.CollectionKeeper = collectionkeeper.NewKeeper(appCodec, keys[collection.StoreKey], app.ClassKeeper)
 
 	// register the staking hooks
@@ -713,6 +749,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(foundation.ModuleName)
+	paramsKeeper.Subspace(wasmtypes.ModuleName)
 
 	return paramsKeeper
 }

@@ -2,6 +2,7 @@ package token
 
 import (
 	sdk "github.com/Finschia/finschia-sdk/types"
+	wasmtypes "github.com/Finschia/wasmd/x/wasm/types"
 )
 
 type (
@@ -12,5 +13,10 @@ type (
 
 		InitGenesis(ctx sdk.Context, data *ClassGenesisState)
 		ExportGenesis(ctx sdk.Context) *ClassGenesisState
+	}
+
+	WasmKeeper interface {
+		Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins) ([]byte, error)
+		GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmtypes.ContractInfo
 	}
 )
